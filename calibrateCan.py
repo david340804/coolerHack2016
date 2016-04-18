@@ -57,7 +57,7 @@ plotStreamWidth = 30
 plotStreamChar = "|"
 
 
-db = pymysql.connect(db="coolerHack",user="aaaaaaaaaaaaa",passwd="aaaaaaaaaa",host='''aaaaaaaaaaaaaaaaaaaaaaaaaa''')
+db = pymysql.connect(db="coolerHack",user="zzzzzzzzzz",passwd="zzzzzzzzzzzzzz",host='''zzzzzzzzzzzzzzzzzzzzz''')
 cursor = db.cursor()
 #empty read to let the serial synchronize
 ser.readline()
@@ -69,6 +69,9 @@ sleep(0.5)
 print("starts runing")
 
 dataList = []
+
+productName = raw_input("What is this product called?\n")
+print("\n")
 
 for i in range(50):
     #serial line reading limits the rate
@@ -95,8 +98,8 @@ for i in range(50):
 ###############################
 ###THIS SHIT IS BIG
     
-    productName = "Fanta Original"
-
+#    productName = raw_input("What is this product called?\n")
+#    print("\n")
 
 ###############################
 

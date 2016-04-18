@@ -1,8 +1,8 @@
+from __future__ import print_function
 from time import sleep
 import serial
 import pymysql
 import datetime
-
 
 ser = serial.Serial('/dev/ttyACM0',9600)
 
@@ -64,11 +64,11 @@ def getNumCans(rowData):
     numCans = 0;
     if rowData < 30:
         numCans = 0;
-    elif rowData < 40:
+    elif rowData < 41:
         numCans = 6;
-    elif rowData < 50:
+    elif rowData < 53:
         numCans = 5;
-    elif rowData < 60:
+    elif rowData < 68:
         numCans = 4;
     elif rowData < 100:
         numCans = 3;
@@ -87,12 +87,15 @@ plotStreamRangeW = plotStreamRange[1] - plotStreamRange[0]
 plotStreamWidth = 30
 plotStreamChar = "|"
         
-db = pymysql.connect(db="coolerHack",user="aaaaaaaaaaaaa",passwd="aaaaaaaaaa",host='''aaaaaaaaaaaaaaaaaaaaaaaaaa''')
+db = pymysql.connect(db="coolerHack",user="zzzzzzzzzzz",passwd="zzzzzzzzzz",host='''zzzzzzzzzzzzzzzzzzzz''')
 cursor = db.cursor()
 sleep(0.5)
 
+#Junk data trials to skip
+junkTrials = 15;
 
-for i in range(75):
+
+for i in range(100):
     try:
         #serial line reading limits the rate
         ser.flushInput()
@@ -112,7 +115,10 @@ for i in range(75):
         #Process rowData into NumCans
         numCans = getNumCans(rowData)
         
-        print(red,green,blue)
+	if i > junkTrials:
+	    print("rowData:"+str(rowData).ljust(4)+"\t("+str(red)+","+str(green)+","+str(blue)+")\t",end="")
+	else:
+	    print(str(i).ljust(3),"rowData:",rowData,red,green,blue)
 #        numCans = 0
         machineID = 0
         rowNum = 1
@@ -120,7 +126,7 @@ for i in range(75):
         greenScan = green
         blueScan = blue
 
-        if i > 25:
+        if i > junkTrials:
             upload(db,cursor,machineID,rowNum,redScan,greenScan,blueScan,numCans)
     except ValueError:
         print("Serial went too fast, flushing before resuming...")
