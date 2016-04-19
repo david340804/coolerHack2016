@@ -1,10 +1,14 @@
 from time import sleep
+from coolerClass.filecfg import filecfg
 import serial
 import pymysql
 import datetime
 
-ser = serial.Serial('/dev/ttyACM0',9600)
+#get configuration info from cfg file
+cfg = filecfg('config.cfg')
 
+#initialise the serial connection
+ser = serial.Serial(cfg.ser_interface,9600)
 
 class calibrateCan():
     def __init__(self,db,cursor,productName,redScan,blueScan,greenScan):
@@ -51,14 +55,16 @@ def formatStream(val):
     return plotStream
 
 
+#config data for formatStream
 plotStreamRange = [950,1024]
 plotStreamRangeW = plotStreamRange[1] - plotStreamRange[0]
 plotStreamWidth = 30
 plotStreamChar = "|"
 
-
-db = pymysql.connect(db="coolerHack",user="zzzzzzzzzz",passwd="zzzzzzzzzzzzzz",host='''zzzzzzzzzzzzzzzzzzzzz''')
+#set up database connection
+db = pymysql.connect(db=cfg.db_db,user=cfg.db_user,passwd=cfg.db_passwd,host=db_host)
 cursor = db.cursor()
+
 #empty read to let the serial synchronize
 ser.readline()
 ser.flushInput()
@@ -93,16 +99,6 @@ for i in range(50):
 
     print(red,green,blue)
     
-
-
-###############################
-###THIS SHIT IS BIG
-    
-#    productName = raw_input("What is this product called?\n")
-#    print("\n")
-
-###############################
-
     redScan = red
     blueScan = blue
     greenScan = green
@@ -126,7 +122,7 @@ if aBool:
     print("fingerprint data sent!")
     
 else:
-    print("Well fuck... No data sent")
+    print("Well ... No data sent")
 
 
 #close connection
