@@ -1,16 +1,22 @@
 from __future__ import print_function
 from time import sleep
+from coolerClass.filecfg import filecfg
 import serial
 import pymysql
 import datetime
 
-ser = serial.Serial('/dev/ttyACM0',9600)
+#get configuration info from cfg file
+cfg = filecfg('config.cfg')
+
+#initialise the serial connection
+ser = serial.Serial(cfg.ser_interface,9600)
 
 #empty read to let the serial synchronize
 ser.readline()
 
 class upload():
     def __init__(self,db,cursor,machineID,rowNum,redScan,greenScan,blueScan,numCans):
+        #set up attributes
         self.db = db
         self.cursor = cursor
         self.dataTime = str(datetime.datetime.now())
@@ -54,12 +60,14 @@ class upload():
         self.db.commit()
         db.commit()
 
+#convert raw rgb intensity into weighted and scaled values
 def formatStream(val):
     plotStream = (float(val-plotStreamRange[0])/float(plotStreamRangeW))
     plotStream = int(plotStream * plotStreamWidth)
     
     return plotStream
 
+#convert rowData raw resistance read into the number of cans
 def getNumCans(rowData):
     numCans = 0;
     if rowData < 30:
@@ -81,19 +89,21 @@ def getNumCans(rowData):
     
     return numCans
 
-
+#config data for formatStream
 plotStreamRange = [950,1024]
 plotStreamRangeW = plotStreamRange[1] - plotStreamRange[0]
 plotStreamWidth = 30
 plotStreamChar = "|"
-        
-db = pymysql.connect(db="coolerHack",user="zzzzzzzzzzz",passwd="zzzzzzzzzz",host='''zzzzzzzzzzzzzzzzzzzz''')
+
+#set up database connection
+db = pymysql.connect(db=cfg.db_db,user=cfg.db_user,passwd=cfg.db_passwd,host=db_host)
 cursor = db.cursor()
+
+#wait a sec for connections
 sleep(0.5)
 
-#Junk data trials to skip
+#Junk data trials to skip while sensor data stabilizes
 junkTrials = 15;
-
 
 for i in range(100):
     try:
@@ -114,24 +124,27 @@ for i in range(100):
 
         #Process rowData into NumCans
         numCans = getNumCans(rowData)
-        
-	if i > junkTrials:
-	    print("rowData:"+str(rowData).ljust(4)+"\t("+str(red)+","+str(green)+","+str(blue)+")\t",end="")
-	else:
-	    print(str(i).ljust(3),"rowData:",rowData,red,green,blue)
-#        numCans = 0
+
+        #print raw sensor data if the junkTrials are done, otherwise just rgb vals
+        if i > junkTrials:
+            print("rowData:"+str(rowData).ljust(4)+"\t("+str(red)+","+str(green)+","+str(blue)+")\t",end="")
+        else:
+            print(str(i).ljust(3),"rowData:",rowData,red,green,blue)
         machineID = 0
         rowNum = 1
         redScan = red
         greenScan = green
         blueScan = blue
 
+        #log the events to the main database
         if i > junkTrials:
             upload(db,cursor,machineID,rowNum,redScan,greenScan,blueScan,numCans)
     except ValueError:
+        #caught partial data from serial mismatch
         print("Serial went too fast, flushing before resuming...")
     sleep(0.05)
 
+#clean up
 db.close()
 cursor.close()
 
